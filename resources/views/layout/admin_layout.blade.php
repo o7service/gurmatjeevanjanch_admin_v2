@@ -139,7 +139,7 @@
             </div>
             <div class="sidebar-wrapper scrollbar scrollbar-inner">
                 <div class="sidebar-content d-flex flex-column h-100">
-                    <ul class="nav nav-secondary flex-grow-1">
+                    <ul class="nav nav-secondary flex-grow-1" id="sidebarList">
                         <li class="nav-item active">
                             <a href="{{ route('dashboard')}}" aria-expanded="false">
                                 <i class="fas fa-home"></i>
@@ -154,83 +154,19 @@
                             <h4 class="text-section">Components</h4>
                         </li>
 
-                        <li class="nav-item">
-                            <a href="{{ route('categories') }}">
-                                <i class="bi bi-telegram"></i>
-                                <p>Category</p>
-                            </a>
-                        </li>
 
-                        <li class="nav-item">
-                            <a href="{{ route('telegram.index') }}">
-                                <i class="bi bi-telegram"></i>
-                                <p>Telegram</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('facebook.index') }}">
-                                <i class="bi bi-facebook"></i>
-                                <p>Facebook</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('whatsappGroups.index') }}">
-                                <i class="bi bi-whatsapp"></i>
-                                <p>Whatsapp Groups</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('instagram.index') }}">
-                                <i class="bi bi-instagram"></i>
-                                <p>Instagram</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('youtube.index') }}">
-                                <i class="bi bi-youtube"></i>
-                                <p>Youtube</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('zoom.index') }}">
-                                <i class="bi bi-youtube"></i>
-                                <p>Zoom</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('website.index') }}">
-                                <i class="bi bi-youtube"></i>
-                                <p>Website</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('sharechat.index') }}">
-                                <i class="bi bi-chat-dots"></i>
-                                <p>Sharechat</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('singer.index') }}">
-                                <i class="bi bi-mic"></i>
-                                <p>Singer</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('programs.index') }}">
-                                <i class="bi bi-mic"></i>
-                                <p>Program</p>
-                            </a>
-                        </li>
+
+
                     </ul>
                     <!-- Logout Button !-->
-                    <ul class="nav nav-secondary mt-auto">
+                    <!-- <ul class="nav nav-secondary mt-auto">
                         <li class="nav-item">
                             <a href="{{ route('logout') }}">
                                 <i class="fas fa-sign-out-alt"></i>
                                 <p>Logout</p>
                             </a>
                         </li>
-                    </ul>
+                    </ul> -->
                 </div>
             </div>
 
@@ -326,10 +262,6 @@
                                         </li>
 
 
-
-
-
-
                                     </div>
                                 </ul>
                             </li>
@@ -358,6 +290,84 @@
                 </div>
             </footer>
         </div>
+
+
+
+
+
+
+
+        <ul class="nav nav-secondary flex-grow-1" id="sidebarList">
+            <li class="nav-item active">
+                <a href="{{ route('dashboard') }}" aria-expanded="false">
+                    <i class="fas fa-home"></i>
+                    <p>Dashboard</p>
+                </a>
+            </li>
+
+            <li class="nav-section">
+                <span class="sidebar-mini-icon">
+                    <i class="fa fa-ellipsis-h"></i>
+                </span>
+                <h4 class="text-section">Components</h4>
+            </li>
+
+            <!-- Categories will render here -->
+        </ul>
+
+        <script>
+            async function getCategories() {
+                try {
+                    const response = await fetch('/layout/category');
+                    if (!response.ok) throw new Error("Network response was not ok");
+                    const categories = await response.json();
+                    console.log(categories)
+
+                    const sidebarList = document.getElementById('sidebarList');
+
+                    // Loop through categories
+                    categories.forEach(cat => {
+                        const li = document.createElement('li');
+                        li.classList.add('nav-item');
+
+                        li.innerHTML = `
+                    <a href="/links/${cat.id}">
+                        <img src="/categories/${cat.icon}" 
+                             style="height:20px;width:20px;margin-right:8px; border-radius:50%"; />
+                        <p>${cat.title}</p>
+                    </a>
+                `;
+                        sidebarList.appendChild(li);
+                    });
+
+                    const staticLinks = [
+                        { title: 'Singer', route: '/singer' },   // replace with actual route
+                        { title: 'Program', route: '/programs' } // replace with actual route
+                    ];
+
+                    staticLinks.forEach(link => {
+                        const li = document.createElement('li');
+                        li.classList.add('nav-item');
+                        li.innerHTML = `
+                <a href="${link.route}">
+                    <i class="bi bi-mic"></i>
+                    <p>${link.title}</p>
+                </a>
+            `;
+                        sidebarList.appendChild(li);
+                    });
+
+                } catch (error) {
+                    console.error("Error fetching categories:", error);
+                }
+            }
+
+            // Call on page load
+            document.addEventListener('DOMContentLoaded', getCategories);
+        </script>
+
+
+
 
         <script>
 

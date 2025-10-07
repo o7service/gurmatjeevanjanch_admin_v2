@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LinksController;
 use App\Http\Controllers\SingerImagesController;
 use App\Http\Controllers\ProgramsLinksController;
 use App\Http\Controllers\CategoryController;
@@ -34,11 +35,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name("dashboard");
     // category Routes .......................................................
-
-    
     Route::get('link/category', [CategoryController::class, 'index'])->name('categories');
     Route::post('/category', [CategoryController::class, 'store'])->name('category.store');
     Route::get('/category/{id}', [CategoryController::class, 'show'])->name('category.show');
+    Route::get('/layout/category', [CategoryController::class, 'getCategories'])->name('category.layout');
     Route::put('/category/{id}', [CategoryController::class, 'update'])->name('category.update');
     Route::put('/category/status/{id}', [CategoryController::class, 'updateStatus'])->name('category.status');
 
@@ -115,3 +115,8 @@ Route::get('/programs/{id}', [ProgramsLinksController::class, 'show'])->name('pr
 Route::put('/programs/{id}', [ProgramsLinksController::class, 'update'])->name('programs.update');
 Route::put('/programs/status/{id}', [ProgramsLinksController::class, 'updateStatus'])->name('programs.status');
 
+Route::get('/links/{id}', [LinksController::class, 'index'])->name('links.index');
+Route::post('/links', [LinksController::class, 'store'])->name('links.store');
+Route::get('/links/show/{id}', [LinksController::class, 'show'])->name('links.show');
+Route::put('/links/{id}', [LinksController::class, 'update'])->name('links.update');
+Route::put('/links/status/{id}', [LinksController::class, 'updateStatus'])->name('links.status');

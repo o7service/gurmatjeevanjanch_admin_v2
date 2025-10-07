@@ -13,6 +13,7 @@ class Category extends Model
         'autoId',
         'title',
         'icon',
+        'isSingle',
         'isDeleted',
         'isBlocked',
         'addedById',

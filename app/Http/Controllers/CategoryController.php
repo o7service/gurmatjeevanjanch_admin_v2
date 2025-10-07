@@ -9,6 +9,16 @@ use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
+
+    public function getCategories()
+    {
+        $categories = Category::where('isDeleted', false)
+            ->where('isBlocked', false)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return response()->json($categories);
+    }
     // Display paginated categories
     public function index()
     {
@@ -91,7 +101,7 @@ class CategoryController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'file' => 'nullable|image|mimes:jpg,jpeg,png,svg,gif|max:2048'
+            // 'file' => 'nullable|image|mimes:jpg,jpeg,png,svg,gif|max:2048'
         ]);
 
         DB::beginTransaction();
@@ -130,6 +140,7 @@ class CategoryController extends Controller
     public function allCategories()
     {
         $categories = Category::where('isBlocked', false)
+            ->where('isDeleted', false)
             ->orderBy('id', 'desc')
             ->get();
 

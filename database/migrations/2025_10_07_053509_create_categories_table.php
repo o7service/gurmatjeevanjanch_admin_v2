@@ -21,6 +21,7 @@ return new class extends Migration
 
             $table->boolean('isDeleted')->default(false);
             $table->boolean('isBlocked')->default(false);
+            $table->boolean('isSingle')->default(false);
 
             $table->unsignedBigInteger('addedById')->nullable();
             $table->foreign("addedById")->references("id")->on("users");
