@@ -606,7 +606,7 @@ body {
     transition: all .3s; }
     .sidebar .sidebar-wrapper .sidebar-content, .sidebar[data-background-color="white"] .sidebar-wrapper .sidebar-content {
       padding-top: 0px;
-      padding-bottom: 100px; }
+      padding-bottom: 10px; }
     .sidebar .sidebar-wrapper .scroll-element.scroll-y, .sidebar[data-background-color="white"] .sidebar-wrapper .scroll-element.scroll-y {
       top: 5px !important; }
   .sidebar .nav, .sidebar[data-background-color="white"] .nav {
@@ -5816,7 +5816,7 @@ label.error {
     padding-top: 0px; }
     .sidebar .sidebar-wrapper .sidebar-content {
       padding-top: 0px !important;
-      padding-bottom: 60px !important; }
+      padding-bottom: 10px !important; }
     .sidebar .sidebar-wrapper .scroll-element.scroll-y {
       top: 0px !important; }
 

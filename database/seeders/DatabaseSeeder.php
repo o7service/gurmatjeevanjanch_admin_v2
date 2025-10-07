@@ -16,11 +16,14 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        User::create([
+        User::create(attributes: [
+            'autoId' => 1,
             'name' => "Admin",
+            'phone' => 7876576575,
             'email' => "admin@gmail.com",
             'password' => Hash::make('123'),
-            'user_type' => 1,
+            'userType' => 1,
+
         ]);
     }
 }

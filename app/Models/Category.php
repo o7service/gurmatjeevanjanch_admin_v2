@@ -10,9 +10,21 @@ class Category extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'image',
-        'description',
+        'autoId',
+        'title',
+        'icon',
+        'isDeleted',
+        'isBlocked',
+        'addedById',
+        'updatedById',
         'status',
     ];
+    public function addedBy()
+    {
+        return $this->hasOne("App\Models\User", "id", "addedById");
+    }
+    public function updatedBy()
+    {
+        return $this->hasOne("App\Models\User", "id", "updatedById");
+    }
 }

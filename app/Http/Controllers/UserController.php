@@ -53,16 +53,12 @@ class UserController extends Controller
         if ($userData) {
             if ($userData['status'] == 'active') {
                 if (Hash::check($validatedData['password'], $userData['password'])) {
-                    $token = $userData->createToken('access-token')->accessToken;
-
+                
                     return response()->json([
                         "success" => true,
                         "status" => 200,
                         "message" => "Login Successfull",
                         "data" => $userData,
-                        "token" => $token,
-
-
                     ]);
                 } else {
                     return response()->json([

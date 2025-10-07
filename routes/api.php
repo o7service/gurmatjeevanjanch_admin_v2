@@ -1,35 +1,50 @@
 <?php
+use App\Http\Controllers\FacebookLinksController;
+use App\Http\Controllers\InstagramLinksController;
+use App\Http\Controllers\SharechatLinksController;
+use App\Http\Controllers\SingerImagesController;
+use App\Http\Controllers\TelegramLinksController;
 
-use App\Http\Controllers\BrandController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\UserController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\WebsiteLinksController;
+use App\Http\Controllers\WhatsappGroupsLinksController;
+use App\Http\Controllers\YoutubeLinksController;
+use App\Http\Controllers\ZoomLinksController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
-
-Route::post("customer/register", [UserController::class, 'register']);
-Route::post("customer/login", [UserController::class, 'login']);
 
 
-Route::post("brand/add", [BrandController::class, 'store'])->middleware('auth:api');
-Route::get("brand/all", [BrandController::class, 'index']);
-Route::get("brand/single/{id}", [BrandController::class, 'show']);
-Route::get("brand/delete/{id}", [BrandController::class, 'destroy']);
-Route::post("brand/update/{id}", [BrandController::class, 'update']);
+// Telegram APIS
+Route::post("telegram/links/all", [TelegramLinksController::class, 'allLinks']);
+Route::post("telegram/link/single", [TelegramLinksController::class, 'singleLink']);
 
-// products Api .......................................................
-Route::get("product/all", [ProductController::class, 'index']);
+// Facebook APIS
+Route::post("facebook/links/all", [FacebookLinksController::class, 'allLinks']);
+Route::post("facebook/link/single", [FacebookLinksController::class, 'singleLink']);
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Instagram APIS
+Route::post("instagram/links/all", [InstagramLinksController::class, 'allLinks']);
+Route::post("instagram/link/single", [InstagramLinksController::class, 'singleLink']);
+
+// Whatsapp Groups APIS
+Route::post("whatsappGroup/links/all", [WhatsappGroupsLinksController::class, 'allLinks']);
+Route::post("whatsappGroup/link/single", [WhatsappGroupsLinksController::class, 'singleLink']);
+
+// Youtube APIS
+Route::post("youtube/links/all", [YoutubeLinksController::class, 'allLinks']);
+Route::post("youtube/link/single", [YoutubeLinksController::class, 'singleLink']);
+
+// Zoom APIS
+Route::post("zoom/links/all", [ZoomLinksController::class, 'allLinks']);
+Route::post("zoom/link/single", [ZoomLinksController::class, 'singleLink']);
+
+// Website APIS
+Route::post("website/links/all", [WebsiteLinksController::class, 'allLinks']);
+Route::post("website/link/single", [WebsiteLinksController::class, 'singleLink']);
+
+// Sharechat APIS
+Route::post("sharechat/links/all", [SharechatLinksController::class, 'allLinks']);
+Route::post("sharechat/link/single", [SharechatLinksController::class, 'singleLink']);
+
+// Singer APIS
+Route::post("singer/links/all", [SingerImagesController::class, 'allLinks']);
+Route::post("singer/link/single", [SingerImagesController::class, 'singleLink']);

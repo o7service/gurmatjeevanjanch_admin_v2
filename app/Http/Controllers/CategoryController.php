@@ -1,134 +1,182 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use App\Models\Category;
+use Illuminate\Support\Facades\DB;
+use App\Models\category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
-        $categories = Category::paginate(10);
-        return view('category.index', compact("categories"));
+        $category = category::orderBy('isBlocked', 'asc')
+            ->orderBy('id', 'desc')
+            ->paginate(10);
+
+        return view('category.index', compact('category'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        return view('category.create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
+        DB::beginTransaction();
+        try {
+            $newFileName = null;
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $newFileName = time() . '-' . $file->getClientOriginalName();
+                $file->move(public_path('categorys'), $newFileName);
+            }
+            $totalLinks = category::count();
+            $newcategory = new category();
+            $newcategory->autoId = $totalLinks + 1;
+            $newcategory->name = $request->name;
+            $newcategory->imageUrl = $newFileName;
+            $newcategory->updatedById = Auth::id();
+            $newcategory->addedById = Auth::id();
+            $newcategory->save();
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => 'category Added Successfully',
+                'data' => $newcategory
+            ], 200);
 
-        $newImageName = null;
+        } catch (\Exception $e) {
+            DB::rollback();
 
-        if ($request->hasFile('image')) {
-            $file = $request->file("image");
-            // print_r($file);
-            // echo $file->getClientOriginalName();
-            // echo $file->getClientOriginalExtension();
-            $newImageName = time() . "-" . $file->getClientOriginalName();
-            // echo $newImageName;
-            $file->move(public_path('category_images'), $newImageName);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error Occurred: ' . $e->getMessage()
+            ], 500);
         }
-        // print_r($request);
-        // echo $request['name'];
-        // die();
-        // echo $request['description'];
-
-        // Category::create([
-        //     "name" => $request['name'],
-        //     "image" => $request['image'],
-        //     "description" => $request['description'],
-        // ]);
-
-        $newCategory = new Category();
-        $newCategory->name = $request->name;
-        $newCategory->image = $newImageName;
-        $newCategory->description = $request->description;
-        $newCategory->save();
-
-        return redirect(route('category.index'))->with("success", "Category Added Successfully");
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
     public function show($id)
     {
-        //
+        $link = category::find($id);
+
+        if (!$link) {
+            return response()->json(['error' => 'Link not found'], 404);
+        }
+
+        return response()->json($link);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
+    public function updateStatus(Request $request, $id)
     {
-        $category = Category::findOrFail($id);
-        // echo $category['name'];
-        // die();
-        return view('category.edit', compact('category'));
+        $link = category::findOrFail($id);
+        if ($link->isBlocked == true) {
+            $link->isBlocked = false;
+        } else {
+            $link->isBlocked = true;
+        }
+        $link->save();
+        return redirect()->back()->with('success', 'Status updated successfully!');
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+
+    // public function deleteLink(Request $request, $id)
+    // {
+    //     $link = category::findOrFail($id);
+    //     if ($link->isDeleted == true) {
+    //         $link->isDeleted = false;
+    //     } else {
+    //         $link->isDeleted = true;
+    //     }
+    //     $link->save();
+    //     return redirect()->back()->with('success', 'Link Deleted successfully!');
+    // }
+
+
     public function update(Request $request, $id)
     {
-        $category = Category::findOrFail($id);
-        $newImageName = null;
-        if ($request->hasFile('new_image')) {
-            $file = $request->file("new_image");
-            $newImageName = time() . "-" . $file->getClientOriginalName();
-            $file->move(public_path('category_images'), $newImageName);
-        } else {
-            $newImageName = $request->old_image;
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'link' => 'required|url|max:255',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Find existing link
+            $link = category::findOrFail($id);
+            // Update fields
+            $link->title = $request->title;
+            $link->link = $request->link;
+            $link->updatedById = Auth::id();
+            $link->save();
+            DB::commit();
+            // Return JSON response
+            return response()->json([
+                'success' => true,
+                'message' => 'Link Updated Successfully',
+                'data' => $link
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return (response()->json([
+                'success' => false,
+                'message' => 'Error Occurred: ' . $e->getMessage()
+            ], 500));
         }
-        $category->name =  $request->name;
-        $category->image =  $newImageName;
-        $category->description =  $request->description;
-        $category->save();
-        return redirect(route('category.index'))->with("success", "Category Updated Successfully");
+    }
+    //APIS
+    public function allLinks()
+    {
+        $category = category::where('isDeleted', false)
+            ->where('isBlocked', false)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        if ($category->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'status' => 404,
+                'message' => 'No active links found.',
+                'data' => []
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => 200,
+            'message' => 'Active links loaded successfully.',
+            'data' => $category
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
+
+    public function singleLink(Request $request)
     {
-        echo $id;
-        $category = Category::findOrFail($id);
-        $category->delete();
-        return redirect()->back()->with("success", "Category Deleted ");
+        // Check if ID is provided
+        if (!$request->id) {
+            return response()->json([
+                'success' => false,
+                'status' => 400,
+                'message' => 'ID is required.',
+            ]);
+        }
+
+        $link = category::where('id', $request->id)->first();
+        if (!$link) {
+            return response()->json([
+                'success' => false,
+                'status' => 404,
+                'message' => 'Link not found.',
+            ]);
+        }
+        return response()->json([
+            'success' => true,
+            'status' => 200,
+            'message' => 'Link loaded successfully.',
+            'data' => $link
+        ]);
+
     }
+
+
+
 }
