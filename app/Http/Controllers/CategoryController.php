@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
-
     public function getCategories()
     {
         $categories = Category::where('isDeleted', false)

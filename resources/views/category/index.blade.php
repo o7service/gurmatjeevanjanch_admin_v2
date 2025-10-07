@@ -1,4 +1,4 @@
-@extends('layout.admin_layout')
+@extends('layout.layout')
 @section('content')
     <div class="container">
         <div class="page-inner">
@@ -76,10 +76,6 @@
                                                         <i class="bi bi-pencil-square"></i>
                                                     </button>
                                                 </div>
-                                                <!-- <form action="{{ route('category.status', $c->id) }}" method="POST"
-                                                                                                    style="display:inline-block;">
-                                                                                                    @csrf
-                                                                                                </form> -->
                                             </td>
                                         </tr>
                                     @endforeach

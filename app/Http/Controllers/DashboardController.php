@@ -14,14 +14,14 @@ class DashboardController extends Controller
     public function dashboard()
     {
 
-        $activeTelegramLinks = telegramLinks::where("isBlocked", false)->count();
-        $blockedTelegramLinks = telegramLinks::where("isBlocked", true)->count();
-        $activeFacebookLinks = facebookLinks::where("isBlocked", false)->count();
-        $blockedFacebookLinks = facebookLinks::where("isBlocked", true)->count();
-        $activeWhatsappGroupLinks = whatsappGroupsLinks::where("isBlocked", false)->count();
-        $blockedWhatsappGroupLinks = whatsappGroupsLinks::where("isBlocked", true)->count();
-        $activeInstagramLinks = instagramLinks::where("isBlocked", false)->count();
-        $blockedInstagramLinks = instagramLinks::where("isBlocked", true)->count();
+        $activeTelegramLinks = 0;
+        $blockedTelegramLinks = 0;
+        $activeFacebookLinks = 0;
+        $blockedFacebookLinks = 0;
+        $activeWhatsappGroupLinks = 0;
+        $blockedWhatsappGroupLinks = 0;
+        $activeInstagramLinks = 0;
+        $blockedInstagramLinks = 0;
         return view('dashboard.dashboard', compact("activeTelegramLinks", "blockedTelegramLinks", "activeFacebookLinks", "blockedFacebookLinks", "activeWhatsappGroupLinks", "blockedWhatsappGroupLinks", "activeInstagramLinks", "blockedInstagramLinks"));
     }
 }

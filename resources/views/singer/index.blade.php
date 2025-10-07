@@ -1,4 +1,4 @@
-@extends('layout.admin_layout')
+@extends('layout.layout')
 @section('content')
     <div class="container">
         <div class="page-inner">
