@@ -155,7 +155,7 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('category.index') }}">
+                            <a href="{{ route('categories') }}">
                                 <i class="bi bi-telegram"></i>
                                 <p>Category</p>
                             </a>

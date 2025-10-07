@@ -12,6 +12,7 @@ use App\Http\Controllers\WebsiteLinksController;
 use App\Http\Controllers\SharechatLinksController;
 use App\Http\Controllers\WhatsappGroupsLinksController;
 use App\Http\Controllers\DashboardController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 
@@ -33,11 +34,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name("dashboard");
     // category Routes .......................................................
+
     
-    // Route::post('/category', [CategoryController::class, 'store'])->name('category.store');
-    // Route::get('/category/{id}', [CategoryController::class, 'show'])->name('category.show');
-    // Route::put('/category/{id}', [CategoryController::class, 'update'])->name('category.update');
-    // Route::put('/category/status/{id}', [CategoryController::class, 'updateStatus'])->name('category.status');
+    Route::get('link/category', [CategoryController::class, 'index'])->name('categories');
+    Route::post('/category', [CategoryController::class, 'store'])->name('category.store');
+    Route::get('/category/{id}', [CategoryController::class, 'show'])->name('category.show');
+    Route::put('/category/{id}', [CategoryController::class, 'update'])->name('category.update');
+    Route::put('/category/status/{id}', [CategoryController::class, 'updateStatus'])->name('category.status');
 
 });
 
@@ -112,4 +115,3 @@ Route::get('/programs/{id}', [ProgramsLinksController::class, 'show'])->name('pr
 Route::put('/programs/{id}', [ProgramsLinksController::class, 'update'])->name('programs.update');
 Route::put('/programs/status/{id}', [ProgramsLinksController::class, 'updateStatus'])->name('programs.status');
 
-Route::get('/category', [CategoryController::class, 'index'])->name('category.index');
