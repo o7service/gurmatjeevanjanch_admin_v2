@@ -48,6 +48,7 @@ class CategoryController extends Controller
             $newCategory = new Category();
             $newCategory->autoId = $totalCategories + 1;
             $newCategory->title = $request->title;
+            $newCategory->actionText = $request->actionText;
             $newCategory->icon = $newFileName;
             $newCategory->addedById = Auth::id();
             $newCategory->updatedById = Auth::id();
@@ -108,7 +109,7 @@ class CategoryController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            // 'file' => 'nullable|image|mimes:jpg,jpeg,png,svg,gif|max:2048'
+            'actionText' => 'string|max:255'
         ]);
 
         DB::beginTransaction();
@@ -123,6 +124,7 @@ class CategoryController extends Controller
             }
 
             $category->title = $request->title;
+            $category->actionText = $request->actionText;
             $category->updatedById = Auth::id();
             $category->save();
 

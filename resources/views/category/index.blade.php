@@ -160,6 +160,18 @@
                                     style="font-size: 0.8rem;" />
                             </div>
 
+                            <!-- Category Text -->
+                            <div class="mb-3">
+                                <label class="form-label small text-muted mb-1">Category Text</label>
+                                <input 
+                                    type="text" 
+                                    class="form-control form-control-sm py-1" 
+                                    id="actionText" 
+                                    name="actionText"
+                                    placeholder="Enter Text"  
+                                    style="font-size: 0.8rem;" />
+                            </div>
+
                             <!-- Image Upload -->
                             <div class="mb-3">
                                 <label class="form-label small text-muted mb-1">Image</label>
@@ -216,6 +228,7 @@
                     .then(data => {
                         document.getElementById("id").value = data.id;
                         document.getElementById("title").value = data.title;
+                        document.getElementById("actionText").value = data.actionText;
 
                         if (data.icon) {
                             document.getElementById('currentImageWrapper').style.display = 'block';
@@ -232,10 +245,12 @@
             function submitForm() {
                 const id = document.getElementById('id').value;
                 const title = document.getElementById('title').value;
+                const actionText = document.getElementById('actionText').value;
                 const file = document.getElementById('file').files[0];
 
                 const formData = new FormData();
                 formData.append('title', title);
+                formData.append('actionText', actionText);
                 if(file) formData.append('file', file);
 
                 let url = '/category';
@@ -263,6 +278,7 @@
             function resetForm() {
                 document.getElementById("id").value = '';
                 document.getElementById("title").value = '';
+                document.getElementById("actionText").value = '';
                 document.getElementById("file").value = '';
                 document.getElementById('currentImageWrapper').style.display = 'none';
                 document.getElementById('currentImage').src = '';
