@@ -6,57 +6,50 @@
 
         <!-- ================== PAGE HEADER ================== -->
         <div class="page-header">
-            <h3 class="fw-bold mb-3">{{ $category->title }} Links</h3>
-
+            <h3 class="fw-bold mb-3">{{ $singer->name }} Audios</h3>
             <ul class="breadcrumbs mb-3">
                 <li class="nav-home">
                     <a href="{{ route('dashboard') }}">
                         <i class="bi bi-house-fill"></i>
                     </a>
                 </li>
-                <li class="separator">
-                    <i class="bi bi-arrow-right"></i>
-                </li>
-                <li class="nav-item">
-                    <a href="#">{{ $category->title }} Links</a>
-                </li>
+                <li class="separator"><i class="bi bi-arrow-right"></i></li>
+                <li class="nav-item"><a href="/singer">Singers</a></li>
+                <li class="separator"><i class="bi bi-arrow-right"></i></li>
+                <li class="nav-item"><a href="#">{{ $singer->name }} Audios</a></li>
             </ul>
         </div>
         <!-- ================== END PAGE HEADER ================== -->
 
 
-        <!-- ================== LINKS TABLE ================== -->
+        <!-- ================== AUDIOS TABLE ================== -->
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
 
                     <!-- Card Header -->
                     <div class="card-header d-flex align-items-center justify-content-between flex-wrap">
-                        <h5 class="card-title mb-0">{{ $category->title }} List</h5>
+                        <h5 class="card-title mb-0">{{ $singer->name }} Audios List</h5>
 
-                        @if (!$category->isSingle)
-                            <!-- Add New Link Button -->
-                            <button 
-                                type="button" 
-                                class="btn btn-primary" 
-                                data-bs-toggle="modal"
-                                data-bs-target="#linksLinkModal" 
-                                onclick="prepareAddForm()">
-                                <i class="bi bi-plus-lg"></i> ADD
-                            </button>
-                        @endif
+                        <!-- Add Audio Button -->
+                        <button 
+                            type="button" 
+                            class="btn btn-primary" 
+                            data-bs-toggle="modal"
+                            data-bs-target="#audiosLinkModal" 
+                            onclick="prepareAddForm()">
+                            <i class="bi bi-plus-lg"></i> ADD
+                        </button>
                     </div>
 
                     <!-- Card Body -->
                     <div class="card-body">
-                        <div class="table-responsive">
                         <table class="table table-head-bg-primary">
                             <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>Title</th>
                                     <th>Link</th>
-                                    {!! $isYoutube ? '<th>Live</th>' : '' !!}
                                     <th>Status</th>
                                     <th>Created At</th>
                                     <th>Action</th>
@@ -64,42 +57,29 @@
                             </thead>
 
                             <tbody>
-                                @foreach ($links as $t)
+                                @foreach ($audios as $t)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $t->title }}</td>
                                         <td>
-                                            <a href="{{ $t->link }}" target="_blank">Link</a>
+                                            <a href="{{ $t->audioLink }}" target="_blank">Audio</a>
                                         </td>
-
-                                        <!-- Live Toggle (Only for YouTube Category) -->
-                                        {!! $isYoutube ? '
-                                            <td>
-                                                <div class="col">
-                                                    <form action="' . route('links.live', $t->id) . '" method="POST">
-                                                        ' . csrf_field() . '
-                                                        ' . method_field('PUT') . '
-                                                        <input type="hidden" name="live" value="' . ($t->isLive ? 'true' : 'false') . '">
-
-                                                        <label class="toggle-switch">
-                                                            <input type="checkbox" onchange="this.form.submit()" ' . ($t->isLive ? 'checked' : '') . '>
-                                                            <span class="toggle-slider round"></span>
-                                                        </label>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        ' : '' !!}
 
                                         <!-- Status Toggle -->
                                         <td>
                                             <div class="col">
-                                                <form action="{{ route('links.status', $t->id) }}" method="POST">
+                                                <form action="{{ route('audios.status', $t->id) }}" method="POST">
                                                     @csrf
                                                     @method('PUT')
-                                                    <input type="hidden" name="status" value="{{ $t->isBlocked ? 'true' : 'false' }}">
-
+                                                    <input 
+                                                        type="hidden" 
+                                                        name="status"
+                                                        value="{{ $t->isBlocked ? 'true' : 'false' }}">
                                                     <label class="toggle-switch">
-                                                        <input type="checkbox" onchange="this.form.submit()" {{ $t->isBlocked ? '' : 'checked' }}>
+                                                        <input 
+                                                            type="checkbox" 
+                                                            onchange="this.form.submit()" 
+                                                            {{ $t->isBlocked ? '' : 'checked' }}>
                                                         <span class="toggle-slider round"></span>
                                                     </label>
                                                 </form>
@@ -122,30 +102,26 @@
                                 @endforeach
                             </tbody>
                         </table>
-                        </div>
-
-                        <!-- Pagination -->
-                        {{ $links->links() }}
                     </div>
+
                 </div>
             </div>
         </div>
-        <!-- ================== END LINKS TABLE ================== -->
+        <!-- ================== END AUDIOS TABLE ================== -->
 
     </div>
 </div>
 
 
-<!-- ================== ADD / EDIT LINK MODAL ================== -->
-<div class="modal fade" id="linksLinkModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-    aria-labelledby="linksLinkModalLabel" aria-hidden="true">
+<!-- ================== ADD / EDIT AUDIO MODAL ================== -->
+<div class="modal fade" id="audiosLinkModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="audiosLinkModalLabel" aria-hidden="true">
 
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
             <!-- Modal Header -->
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fs-5 fw-semibold" id="linksLinkModalLabel">Add Link</h5>
+                <h5 class="modal-title fs-5 fw-semibold" id="audiosLinkModalLabel">Add Audio</h5>
                 <button 
                     type="button" 
                     class="btn-close" 
@@ -157,12 +133,12 @@
 
             <!-- Modal Body -->
             <div class="modal-body pt-1">
-                <form id="linksForm" onsubmit="submitForm(); return false;">
+                <form id="audiosForm" onsubmit="submitForm(); return false;">
                     @csrf
 
                     <!-- Hidden Fields -->
                     <input type="hidden" id="id" name="id" />
-                    <input type="hidden" id="categoryId" name="categoryId" value="{{ $category->id }}" />
+                    <input type="hidden" id="singerId" name="singerId" value="{{ $singer->id }}" />
 
                     <!-- Title Field -->
                     <div class="mb-3">
@@ -177,7 +153,7 @@
                             style="font-size: 0.8rem;" />
                     </div>
 
-                    <!-- Link URL Field -->
+                    <!-- Audio Link Field -->
                     <div class="mb-3">
                         <label class="form-label small text-muted mb-1">Link URL</label>
                         <input 
@@ -185,15 +161,18 @@
                             class="form-control form-control-sm py-1" 
                             id="link" 
                             name="link"
-                            placeholder="Enter URL" 
+                            placeholder="Enter Audio URL" 
                             required 
                             style="font-size: 0.8rem;" />
                     </div>
 
-                    <!-- Current Icon Preview -->
+                    <!-- Current Icon Preview (Optional) -->
                     <div class="mb-3" id="currentIconWrapper" style="display:none;">
                         <label class="form-label small text-muted mb-1">Current Icon</label>
-                        <img id="currentIcon" src="" style="height:60px; width:60px; border-radius:50%;" />
+                        <img 
+                            id="currentIcon" 
+                            src="" 
+                            style="height:60px; width:60px; border-radius:50%;" />
                     </div>
 
                     <!-- Modal Footer -->
@@ -222,29 +201,29 @@
 
 <!-- ================== JAVASCRIPT ================== -->
 <script>
+    // Track whether the form is in Add or Edit mode
     let formType = "add";
 
     /**
-     * Prepare modal for adding a new link
+     * Prepare modal for adding a new audio
      */
     function prepareAddForm() {
         formType = "add";
         resetForm();
-        document.getElementById('linksLinkModalLabel').innerText = "Add {{ $category->title }} Link";
+        document.getElementById('audiosLinkModalLabel').innerText = "Add {{ $singer->name }}'s Audio";
         document.getElementById('formSubmitBtn').innerText = "Add";
     }
 
     /**
-     * Fetch existing data and prepare modal for editing
+     * Fetch existing audio data for editing
      */
     function fetchData(id) {
         showSpinner();
         formType = "edit";
-
-        document.getElementById('linksLinkModalLabel').innerText = "Edit {{ $category->title }} Link";
+        document.getElementById('audiosLinkModalLabel').innerText = "Edit {{ $singer->name }}'s Audio";
         document.getElementById('formSubmitBtn').innerText = "Update";
 
-        fetch(`/links/show/${id}`)
+        fetch(`/audios/show/${id}`)
             .then(response => {
                 if (!response.ok) throw new Error("Network response was not ok");
                 return response.json();
@@ -252,31 +231,31 @@
             .then(data => {
                 document.getElementById("id").value = data.id;
                 document.getElementById("title").value = data.title;
-                document.getElementById("link").value = data.link;
+                document.getElementById("link").value = data.audioLink;
                 hideSpinner();
-                const modal = new bootstrap.Modal(document.getElementById("linksLinkModal"));
+                const modal = new bootstrap.Modal(document.getElementById("audiosLinkModal"));
                 modal.show();
             })
             .catch(error => console.error("Error fetching data:", error));
     }
 
     /**
-     * Submit form dynamically (Add or Edit)
+     * Submit form dynamically (Add or Edit mode)
      */
     function submitForm() {
         const id = document.getElementById('id').value;
         const title = document.getElementById('title').value;
         const link = document.getElementById('link').value;
-        const categoryId = document.getElementById('categoryId').value;
+        const singerId = document.getElementById('singerId').value;
 
         let url = '';
         let method = '';
 
         if (formType === 'add') {
-            url = '/links';
+            url = '/audios';
             method = 'POST';
         } else {
-            url = `/links/${id}`;
+            url = `/audios/${id}`;
             method = 'PUT';
         }
 
@@ -288,26 +267,25 @@
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({ title, link, categoryId })
+            body: JSON.stringify({ title, link, singerId })
         })
         .then(response => response.json())
         .then(data => {
-            const modalEl = document.getElementById('linksLinkModal');
+            console.log('Success:', data);
+
+            // Close modal and reload
+            const modalEl = document.getElementById('audiosLinkModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
             modal.hide();
-            location.reload();
 
             hideSpinner();
-
-            setTimeout(() => {
-                showToastr(data.message, "Success");
-            }, 2500);
+            location.reload();
         })
         .catch(error => console.error('Error:', error));
     }
 
     /**
-     * Reset form fields
+     * Reset all form fields
      */
     function resetForm() {
         document.getElementById("id").value = '';

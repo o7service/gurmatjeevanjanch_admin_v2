@@ -1,51 +1,55 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Audios;
+use App\Models\Category;
+use App\Models\Links;
 use App\Models\singerImages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
-class SingerImagesController extends Controller
+class AudiosController extends Controller
 {
-    public function index()
+    public function index($id)
     {
-        $singerImages = singerImages::orderBy('isBlocked', 'asc')
+        // Fetch the category by ID
+        $singer = singerImages::find($id);
+
+        // Fetch only links related to this category
+        $audios = Audios::where('singerId', $id)
+            ->orderBy('isBlocked', 'asc')
             ->orderBy('id', 'desc')
             ->paginate(10);
 
-        return view('singer.index', compact('singerImages'));
+        // Send both variables to the view
+        return view('audios.index', compact('singer', 'audios'));
     }
 
     public function store(Request $request)
     {
+      
         DB::beginTransaction();
         try {
-            $newFileName = null;
-            if ($request->hasFile('file')) {
-                $file = $request->file('file');
-                $newFileName = time() . '-' . $file->getClientOriginalName();
-                $file->move(public_path('singers'), $newFileName);
-            }
-            $totalLinks = singerImages::count();
-            $newSinger = new singerImages();
-            $newSinger->autoId = $totalLinks + 1;
-            $newSinger->name = $request->name;
-            $newSinger->imageUrl = $newFileName;
-            $newSinger->updatedById = Auth::id();
-            $newSinger->addedById = Auth::id();
-            $newSinger->save();
+            $totalLinks = Audios::count();
+            $newLink = new Audios();
+            $newLink->autoId = $totalLinks + 1;
+            $newLink->singerId = $request->singerId;
+            $newLink->title = $request->title;
+            $newLink->audioLink = $request->link;
+            $newLink->updatedById = Auth::id();
+            $newLink->addedById = Auth::id();
+            $newLink->save();
             DB::commit();
             return response()->json([
                 'success' => true,
-                'message' => 'Singer Added Successfully',
-                'data' => $newSinger
+                'message' => 'Link Added Successfully',
+                'data' => $newLink
             ], 200);
 
         } catch (\Exception $e) {
             DB::rollback();
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error Occurred: ' . $e->getMessage()
@@ -53,10 +57,9 @@ class SingerImagesController extends Controller
         }
     }
 
-
     public function show($id)
     {
-        $link = singerImages::find($id);
+        $link = Audios::find($id);
 
         if (!$link) {
             return response()->json(['error' => 'Link not found'], 404);
@@ -67,7 +70,7 @@ class SingerImagesController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        $link = singerImages::findOrFail($id);
+        $link = Audios::findOrFail($id);
         if ($link->isBlocked == true) {
             $link->isBlocked = false;
         } else {
@@ -77,38 +80,22 @@ class SingerImagesController extends Controller
         return redirect()->back()->with('success', 'Status updated successfully!');
     }
 
-
-    // public function deleteLink(Request $request, $id)
-    // {
-    //     $link = singerImages::findOrFail($id);
-    //     if ($link->isDeleted == true) {
-    //         $link->isDeleted = false;
-    //     } else {
-    //         $link->isDeleted = true;
-    //     }
-    //     $link->save();
-    //     return redirect()->back()->with('success', 'Link Deleted successfully!');
-    // }
-
-
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'title' => 'required|string|max:255',
+            'link' => 'required|url|max:255',
         ]);
 
         DB::beginTransaction();
+
         try {
-            $link = singerImages::findOrFail($id);
-
-            if ($request->hasFile('file')) {
-                $file = $request->file('file');
-                $newFileName = 'singers/'. time() . '-' . $file->getClientOriginalName();
-                $file->move(public_path('singers'), $newFileName);
-                $link->imageUrl = $newFileName;
-            }
-
-            $link->name = $request->name;
+            // Find existing link
+            $link = Audios::findOrFail($id);
+            // Update fields
+            $link->singerId = $request->singerId;
+            $link->title = $request->title;
+            $link->audioLink = $request->link;
             $link->updatedById = Auth::id();
             $link->save();
             DB::commit();
@@ -127,19 +114,20 @@ class SingerImagesController extends Controller
             ], 500));
         }
     }
+
     //APIS
-    public function allSingers()
+    public function allAudios()
     {
-        $singerImages = singerImages::where('isDeleted', false)
+        $Audios = Audios::where('isDeleted', false)
             ->where('isBlocked', false)
             ->orderBy('id', 'desc')
             ->get();
 
-        if ($singerImages->isEmpty()) {
+        if ($Audios->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'No singers found.',
+                'message' => 'No active audios found.',
                 'data' => []
             ]);
         }
@@ -147,12 +135,47 @@ class SingerImagesController extends Controller
         return response()->json([
             'success' => true,
             'status' => 200,
-            'message' => 'Singers loaded successfully.',
-            'data' => $singerImages
+            'message' => 'Active audios loaded successfully.',
+            'data' => $Audios
         ]);
     }
 
-    public function singleSinger(Request $request)
+    public function singerAudio(Request $request)
+    {
+        // Check if ID is provided
+        if (!$request->singerId) {
+            return response()->json([
+                'success' => false,
+                'status' => 400,
+                'message' => 'singerId is required.',
+            ]);
+        }
+        $Audios = Audios::where('isDeleted', false)
+            ->where('isBlocked', false)
+            ->where('singerId', $request->singerId)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        if ($Audios->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'status' => 404,
+                'message' => 'No active audios found.',
+                'data' => []
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => 200,
+            'message' => 'Active audios loaded successfully.',
+            'data' => $Audios
+        ]);
+
+    }
+
+
+    public function singleAudio(Request $request)
     {
         // Check if ID is provided
         if (!$request->id) {
@@ -163,23 +186,21 @@ class SingerImagesController extends Controller
             ]);
         }
 
-        $link = singerImages::where('id', $request->id)->first();
+        $link = Links::where('id', $request->id)->where('isBlocked', false)->first();
         if (!$link) {
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'Singer not found.',
+                'message' => 'Audio not found.',
             ]);
         }
         return response()->json([
             'success' => true,
             'status' => 200,
-            'message' => 'Singer loaded successfully.',
+            'message' => 'Audio loaded successfully.',
             'data' => $link
         ]);
 
     }
-
-
 
 }

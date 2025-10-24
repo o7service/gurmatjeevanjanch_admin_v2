@@ -1,27 +1,40 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\Links;
 
-
-use App\Models\facebookLinks;
-use App\Models\instagramLinks;
-use App\Models\telegramLinks;
-use App\Models\whatsappGroupsLinks;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     public function dashboard()
     {
+        $categoryNames = ['Whatsapp', 'Facebook', 'Telegram', 'Instagram', 'Youtube'];
+        $categories = \App\Models\Category::whereIn('title', $categoryNames)->pluck('id', 'title');
+        $telegramId = $categories['Telegram'];
+        $facebookId = $categories['Facebook'];
+        $whatsappId = $categories['Whatsapp'];
+        $instagramId = $categories['Instagram'];
+        $youtubeId = $categories['Youtube'];
 
-        $activeTelegramLinks = 0;
-        $blockedTelegramLinks = 0;
-        $activeFacebookLinks = 0;
-        $blockedFacebookLinks = 0;
-        $activeWhatsappGroupLinks = 0;
-        $blockedWhatsappGroupLinks = 0;
-        $activeInstagramLinks = 0;
-        $blockedInstagramLinks = 0;
-        return view('dashboard.dashboard', compact("activeTelegramLinks", "blockedTelegramLinks", "activeFacebookLinks", "blockedFacebookLinks", "activeWhatsappGroupLinks", "blockedWhatsappGroupLinks", "activeInstagramLinks", "blockedInstagramLinks"));
+        $stats = [];
+
+        foreach ($categories as $name => $id) {
+            $stats["active{$name}Links"] = Links::where('categoryId', $id)
+                ->where('isBlocked', false)
+                ->count();
+
+            $stats["blocked{$name}Links"] = Links::where('categoryId', $id)
+                ->where('isBlocked', true)
+                ->count();
+        }
+
+        return view('dashboard.dashboard', array_merge($stats, [
+            'telegramId' => $telegramId,
+            'facebookId' => $facebookId,
+            'whatsappId' => $whatsappId,
+            'instagramId' => $instagramId,
+            'youtubeId' => $youtubeId,
+        ]));
+
     }
 }

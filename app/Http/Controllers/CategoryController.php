@@ -13,7 +13,7 @@ class CategoryController extends Controller
     {
         $categories = Category::where('isDeleted', false)
             ->where('isBlocked', false)
-            ->orderBy('id', 'desc')
+            ->orderBy('isSingle', 'asc')
             ->get();
 
         return response()->json($categories);
@@ -22,7 +22,7 @@ class CategoryController extends Controller
     public function index()
     {
         $categories = Category::orderBy('isBlocked', 'asc')
-            ->orderBy('id', 'desc')
+            ->orderBy('isSingle', 'asc')
             ->paginate(10);
 
         return view('category.index', compact('categories'));
@@ -41,12 +41,10 @@ class CategoryController extends Controller
             $newFileName = null;
             if ($request->hasFile('file')) {
                 $file = $request->file('file');
-                $newFileName = time() . '-' . $file->getClientOriginalName();
+                $newFileName = 'categories/'. time() . '-' . $file->getClientOriginalName();
                 $file->move(public_path('categories'), $newFileName);
             }
-
             $totalCategories = Category::count();
-
             $newCategory = new Category();
             $newCategory->autoId = $totalCategories + 1;
             $newCategory->title = $request->title;
@@ -95,6 +93,16 @@ class CategoryController extends Controller
         return redirect()->back()->with('success', 'Status updated successfully!');
     }
 
+     public function updateSingle($id)
+    {
+        $category = Category::findOrFail($id);
+        $category->isSingle = !$category->isSingle;
+        $category->updatedById = Auth::id();
+        $category->save();
+
+        return redirect()->back()->with('success', 'Status updated successfully!');
+    }
+
     // Update a category
     public function update(Request $request, $id)
     {
@@ -109,7 +117,7 @@ class CategoryController extends Controller
 
             if ($request->hasFile('file')) {
                 $file = $request->file('file');
-                $newFileName = time() . '-' . $file->getClientOriginalName();
+                $newFileName = 'categories/'. time() . '-' . $file->getClientOriginalName();
                 $file->move(public_path('categories'), $newFileName);
                 $category->icon = $newFileName;
             }
