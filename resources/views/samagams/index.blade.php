@@ -51,6 +51,7 @@
                                     <th>Contact</th>
                                     <th>Start Date</th>
                                     <th>End Date</th>
+                                    <th>Requested At</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -62,6 +63,7 @@
                                     <td>{{ $t->phone }}</td>
                                     <td>{{ $t->startDate }}</td>
                                     <td>{{ $t->endDate }}</td>
+                                    <td>{{ $t->created_at }}</td>
 
                                     <!-- Action Buttons -->
                                     <td>

@@ -6,6 +6,7 @@ use App\Models\Samagam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log; 
 
 class SamagamsController extends Controller
 {
@@ -59,6 +60,7 @@ class SamagamsController extends Controller
 
     public function store(Request $request)
     {
+        Log::info("REQUEST RECIEVED::: ".$request);
         if (!$request->organizerName || !$request->details || !$request->startDate || !$request->phone || !$request->address || !$request->endDate || !$request->email || !$request->mapLink) {
             return response()->json([
                 'success' => false,

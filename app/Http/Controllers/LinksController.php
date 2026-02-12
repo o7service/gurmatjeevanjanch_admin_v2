@@ -12,10 +12,16 @@ class LinksController extends Controller
 {
     public function index($id)
     {
-        $categoryName = ['Youtube'];
-        $categories = Category::whereIn('title', $categoryName)->pluck('id', 'title');
-        $category = Category::find($id);
-        $isYoutube = $categories->contains($category->id);
+        // FIXED BY GARV on 20-12-25, because of an issue encountered
+
+        // $categoryName = ['Youtube'];
+        // $categories = Category::whereIn('title', $categoryName)->pluck('id', 'title');
+        // $category = Category::find($id);
+        // $isYoutube = $categories->contains($category->id);
+
+        $category = Category::findOrFail($id);
+        $isYoutube = $category->title === 'Youtube';
+
         $links = Links::where('categoryId', $id)
             ->orderBy('isBlocked', 'asc')
             ->orderBy('id', 'desc')
@@ -23,43 +29,43 @@ class LinksController extends Controller
         return view('links.index', compact('category', 'links', 'isYoutube'));
     }
     public function store(Request $request)
-{
-    $request->validate([
-        'categoryId' => 'required|string|max:255',
-        'title' => 'required|string|max:255',
-        'link' => 'required|url|max:255',
-    ]);
+    {
+        $request->validate([
+            'categoryId' => 'required|string|max:255',
+            'title' => 'required|string|max:255',
+            'link' => 'required|url|max:255',
+        ]);
 
-    DB::beginTransaction();
-    try {
-        $totalLinks = Links::count();
-        $newLink = new Links();
-        $newLink->autoId = $totalLinks + 1;
-        $newLink->categoryId = $request->categoryId;
-        $newLink->title = $request->title;
-        $newLink->link = $request->link;
-        $newLink->updatedById = Auth::id();
-        $newLink->addedById = Auth::id();
-        $newLink->save();
-        DB::commit();
+        DB::beginTransaction();
+        try {
+            $totalLinks = Links::count();
+            $newLink = new Links();
+            $newLink->autoId = $totalLinks + 1;
+            $newLink->categoryId = $request->categoryId;
+            $newLink->title = $request->title;
+            $newLink->link = $request->link;
+            $newLink->updatedById = Auth::id();
+            $newLink->addedById = Auth::id();
+            $newLink->save();
+            DB::commit();
 
-        return response()->json([
+            return response()->json([
                 'success' => true,
                 'message' => 'Category Added Successfully',
                 'data' => $newLink
             ], 200);
 
-    } catch (\Exception $e) {
-        DB::rollback();
-        if ($request->ajax()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error adding link!'
-            ], 500);
+        } catch (\Exception $e) {
+            DB::rollback();
+            if ($request->ajax()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Error adding link!'
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Error adding link!');
         }
-        return redirect()->back()->with('error', 'Error adding link!');
     }
-}
 
 
     public function show($id)
@@ -84,17 +90,17 @@ class LinksController extends Controller
     }
 
     public function updateLive(Request $request, $id)
-{
-    $link = Links::findOrFail($id);
-    if (!$link->isLive) {
-        Links::where('id', '!=', $link->id)->update(['isLive' => false]);
-        $link->isLive = true;
-    } else {
-        $link->isLive = false;
+    {
+        $link = Links::findOrFail($id);
+        if (!$link->isLive) {
+            Links::where('id', '!=', $link->id)->update(['isLive' => false]);
+            $link->isLive = true;
+        } else {
+            $link->isLive = false;
+        }
+        $link->save();
+        return redirect()->back()->with('success', 'Live status updated successfully!');
     }
-    $link->save();
-    return redirect()->back()->with('success', 'Live status updated successfully!');
-}
 
 
     public function update(Request $request, $id)

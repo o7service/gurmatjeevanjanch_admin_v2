@@ -15,6 +15,7 @@ class programsLinks extends Model
         'details',
         'imageUrl',
         'mapLink',
+        'time',
         'startDate',
         'endDate',
         'contactNumber1',

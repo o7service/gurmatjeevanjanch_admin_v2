@@ -21,6 +21,7 @@ return new class extends Migration
             $table->text('details');
             $table->text('imageUrl');
             $table->text('mapLink');
+            $table->time('time');
             $table->date('startDate');
             $table->date('endDate');
             $table->bigInteger('contactNumber1');

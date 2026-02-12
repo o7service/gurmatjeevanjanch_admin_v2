@@ -30,9 +30,10 @@
             width: 100%;
             height: 100%;
             background: rgba(255, 255, 255, 0.7);
-            z-index: 1055;
-            text-align: center;
-            padding-top: 20%;
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .toggle-switch {
