@@ -13,6 +13,7 @@ class Links extends Model
         'categoryId',
         'title',
         'link',
+        'thumbnail',
         'isDeleted',
         'isBlocked',
         'addedById',

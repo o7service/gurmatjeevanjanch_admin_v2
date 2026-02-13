@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->bigInteger('autoId')->nullable();
             $table->string('title');
             $table->string('link');
+            $table->string('thumbnail');
 
             
             $table->unsignedBigInteger('categoryId')->nullable();

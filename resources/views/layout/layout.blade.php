@@ -204,9 +204,9 @@
                 </nav>
             </div>
 
-            <div id="loader">
+            <!-- <div id="loader">
                 <div class="spinner-border  text-primary"> </div>
-            </div>
+            </div> -->
 
             @yield('content')
 
@@ -264,7 +264,7 @@
                     const staticLinks = [
                         { title: 'Singers', route: '/singer', img: 'microphone.png' },
                         { title: 'Programs', route: '/list/programs', img: 'Gurmat_Logo.png' },
-                        { title: 'Samagam Requests', route: '/samagam/unviewed', img: 'Gurmat_Logo.png' }
+                        { title: 'Samagam Requests', route: '/samagam/all', img: 'Gurmat_Logo.png' }
                     ];
 
                     staticLinks.forEach(link => {
@@ -296,10 +296,10 @@
 
         <script>
             function showSpinner() {
-                document.getElementById('loader').style.display = 'block';
+                // document.getElementById('loader').style.display = 'block';
             }
             function hideSpinner() {
-                document.getElementById('loader').style.display = 'none';
+                // document.getElementById('loader').style.display = 'none';
             }
             function showToastr(msg, title) {
                 var placementFrom = $("#notify_placement_from option:selected").val();

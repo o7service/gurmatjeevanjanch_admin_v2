@@ -34,36 +34,56 @@ class LinksController extends Controller
             'categoryId' => 'required|string|max:255',
             'title' => 'required|string|max:255',
             'link' => 'required|url|max:255',
+            'file' => 'nullable|image|mimes:jpg,jpeg,png'
+                . '|dimensions:width=1280,height=720'
+        ], [
+            'file.dimensions' => 'Thumbnail must be 1280x720 pixels.'
         ]);
 
         DB::beginTransaction();
+
         try {
-            $totalLinks = Links::count();
+
+            $newFileName = null;
+
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                if (!file_exists(public_path('thumbnails'))) {
+                    mkdir(public_path('thumbnails'), 0777, true);
+                }
+                $newFileName = 'thumbnails/' . time() . '-' . $file->getClientOriginalName();
+                $file->move(public_path('thumbnails'), $newFileName);
+            }
+
+            $lastLink = Links::orderBy('autoId', 'desc')->first();
+            $nextAutoId = $lastLink ? $lastLink->autoId + 1 : 1;
+
             $newLink = new Links();
-            $newLink->autoId = $totalLinks + 1;
+            $newLink->autoId = $nextAutoId;
             $newLink->categoryId = $request->categoryId;
             $newLink->title = $request->title;
             $newLink->link = $request->link;
-            $newLink->updatedById = Auth::id();
+            $newLink->thumbnail = $newFileName;
             $newLink->addedById = Auth::id();
+            $newLink->updatedById = Auth::id();
             $newLink->save();
+
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Category Added Successfully',
+                'message' => 'Link Added Successfully',
                 'data' => $newLink
             ], 200);
 
         } catch (\Exception $e) {
+
             DB::rollback();
-            if ($request->ajax()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Error adding link!'
-                ], 500);
-            }
-            return redirect()->back()->with('error', 'Error adding link!');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error Occurred: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -106,19 +126,45 @@ class LinksController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
+            'categoryId' => 'required|string|max:255',
             'title' => 'required|string|max:255',
             'link' => 'required|url|max:255',
+            'file' => 'nullable|image|mimes:jpg,jpeg,png'
+                . '|dimensions:width=1280,height=720'
+        ], [
+            'file.dimensions' => 'Thumbnail must be 1280x720 pixels.'
         ]);
 
         DB::beginTransaction();
+
         try {
             $link = Links::findOrFail($id);
+            if ($request->hasFile('file')) {
+                if ($link->thumbnail && file_exists(public_path($link->thumbnail))) {
+                    unlink(public_path($link->thumbnail));
+                }
+
+                $file = $request->file('file');
+
+                if (!file_exists(public_path('thumbnails'))) {
+                    mkdir(public_path('thumbnails'), 0777, true);
+                }
+
+                $newFileName = 'thumbnails/' . time() . '-' . $file->getClientOriginalName();
+                $file->move(public_path('thumbnails'), $newFileName);
+
+                $link->thumbnail = $newFileName;
+            }
+
             $link->categoryId = $request->categoryId;
             $link->title = $request->title;
             $link->link = $request->link;
             $link->updatedById = Auth::id();
+
             $link->save();
+
             DB::commit();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Link Updated Successfully',
@@ -126,11 +172,13 @@ class LinksController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+
             DB::rollback();
-            return (response()->json([
+
+            return response()->json([
                 'success' => false,
                 'message' => 'Error Occurred: ' . $e->getMessage()
-            ], 500));
+            ], 500);
         }
     }
 
