@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Audios;
-use App\Models\Category;
-use App\Models\Links;
 use App\Models\singerImages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +27,7 @@ class AudiosController extends Controller
 
     public function store(Request $request)
     {
-      
+
         DB::beginTransaction();
         try {
             $totalLinks = Audios::count();
@@ -116,11 +114,22 @@ class AudiosController extends Controller
     }
 
     //APIS
-    public function allAudios()
+    public function allAudios(Request $request)
     {
-        $Audios = Audios::where('isDeleted', false)
+        $locale = $request->header('Accept-Language', 'en');
+
+        $startPoint = $request->startPoint ?? 0;
+        $limit = $request->limit ?? 5;
+
+        $baseQuery = Audios::where('isDeleted', false)
             ->where('isBlocked', false)
-            ->orderBy('id', 'desc')
+            ->orderBy('id', 'desc');
+
+        $total = $baseQuery->count();
+
+        $Audios = $baseQuery
+            ->skip($startPoint)
+            ->take($limit)
             ->get();
 
         if ($Audios->isEmpty()) {
@@ -132,9 +141,27 @@ class AudiosController extends Controller
             ]);
         }
 
+        if ($locale !== 'en') {
+            $Audios->transform(function ($item) use ($locale) {
+
+                if (!empty($item->title)) {
+                    $item->title = translateText($item->title, $locale);
+                }
+
+                if (!empty($item->description)) {
+                    $item->description = translateText($item->description, $locale);
+                }
+
+                return $item;
+            });
+        }
+
         return response()->json([
             'success' => true,
             'status' => 200,
+            'totalRecords' => $total,
+            'startPoint' => (int) $startPoint,
+            'limit' => (int) $limit,
             'message' => 'Active audios loaded successfully.',
             'data' => $Audios
         ]);
@@ -142,7 +169,8 @@ class AudiosController extends Controller
 
     public function singerAudio(Request $request)
     {
-        // Check if ID is provided
+        $locale = substr($request->header('Accept-Language', 'en'), 0, 2);
+
         if (!$request->singerId) {
             return response()->json([
                 'success' => false,
@@ -150,57 +178,111 @@ class AudiosController extends Controller
                 'message' => 'singerId is required.',
             ]);
         }
-        $Audios = Audios::where('isDeleted', false)
+
+        $startPoint = $request->startPoint ?? 0;
+        $limit = $request->limit ?? 10;
+
+        $baseQuery = Audios::where('isDeleted', false)
             ->where('isBlocked', false)
             ->where('singerId', $request->singerId)
-            ->orderBy('id', 'desc')
+            ->orderBy('id', 'desc');
+
+        $total = $baseQuery->count();
+
+        $Audios = $baseQuery
+            ->skip($startPoint)
+            ->take($limit)
             ->get();
 
         if ($Audios->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'No active audios found.',
+                'message' => translateText('No active audios found.', $locale),
                 'data' => []
             ]);
         }
 
+        if ($locale !== 'en') {
+
+            // 🔥 Collect all texts first
+            $titles = $Audios->pluck('title')->filter()->values()->toArray();
+            $descriptions = $Audios->pluck('description')->filter()->values()->toArray();
+
+            // 🔥 Batch translate
+            $translatedTitles = batchTranslate($titles, $locale);
+            $translatedDescriptions = batchTranslate($descriptions, $locale);
+
+            // 🔥 Re-assign
+            $titleIndex = 0;
+            $descIndex = 0;
+
+            $Audios->transform(function ($item) use (&$titleIndex, &$descIndex, $translatedTitles, $translatedDescriptions) {
+
+                if (!empty($item->title)) {
+                    $item->title = $translatedTitles[$titleIndex++] ?? $item->title;
+                }
+
+                if (!empty($item->description)) {
+                    $item->description = $translatedDescriptions[$descIndex++] ?? $item->description;
+                }
+
+                return $item;
+            });
+        }
+
         return response()->json([
             'success' => true,
             'status' => 200,
+            'totalRecords' => $total,
+            'startPoint' => (int) $startPoint,
+            'limit' => (int) $limit,
             'message' => 'Active audios loaded successfully.',
             'data' => $Audios
         ]);
-
     }
-
-
     public function singleAudio(Request $request)
     {
-        // Check if ID is provided
+        $locale = $request->header('Accept-Language', 'en');
+
         if (!$request->id) {
             return response()->json([
                 'success' => false,
                 'status' => 400,
-                'message' => 'ID is required.',
+                'message' => translateText('ID is required.', $locale),
             ]);
         }
 
-        $link = Links::where('id', $request->id)->where('isBlocked', false)->first();
-        if (!$link) {
+        $audio = Audios::where('id', $request->id)
+            ->where('isBlocked', false)
+            ->where('isDeleted', false)
+            ->first();
+
+        if (!$audio) {
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'Audio not found.',
+                'message' => translateText('Audio not found.', $locale),
             ]);
         }
+
+        if ($locale !== 'en') {
+
+            if (!empty($audio->title)) {
+                $audio->title = translateText($audio->title, $locale);
+            }
+
+            if (!empty($audio->description)) {
+                $audio->description = translateText($audio->description, $locale);
+            }
+        }
+
         return response()->json([
             'success' => true,
             'status' => 200,
             'message' => 'Audio loaded successfully.',
-            'data' => $link
+            'data' => $audio
         ]);
-
     }
 
 }

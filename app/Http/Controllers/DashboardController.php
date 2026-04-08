@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 use App\Models\Links;
 use App\Models\Category;
-
-
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -42,15 +41,17 @@ class DashboardController extends Controller
 
 
     // APIS
-    public function home()
+    public function home(Request $request)
     {
         try {
+
+            $locale = $request->header('Accept-Language', 'en');
 
             $wantedCategories = ['Youtube', 'Instagram', 'Telegram', 'Facebook', 'Whatsapp', 'Sharechat'];
 
             $categories = Category::where('isBlocked', false)
-                ->whereIn('title', $wantedCategories)
                 ->where('isDeleted', false)
+                ->whereIn('title', $wantedCategories)
                 ->orderBy('id', 'desc')
                 ->get();
 
@@ -81,6 +82,54 @@ class DashboardController extends Controller
                     ->first();
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | Translation Logic
+            |--------------------------------------------------------------------------
+            */
+
+            if ($locale !== 'en') {
+
+                // Translate Categories
+                $categories->transform(function ($item) use ($locale) {
+
+                    if (!empty($item->title)) {
+                        $item->title = translateText($item->title, $locale);
+                    }
+
+                    if (!empty($item->description)) {
+                        $item->description = translateText($item->description, $locale);
+                    }
+
+                    if (!empty($item->actionText)) {
+                        $item->actionText = translateText($item->actionText, $locale);
+                    }
+                    return $item;
+                });
+
+                // Translate Youtube Link
+                if ($youtubeLink) {
+                    if (!empty($youtubeLink->title)) {
+                        $youtubeLink->title = translateText($youtubeLink->title, $locale);
+                    }
+
+                    if (!empty($youtubeLink->description)) {
+                        $youtubeLink->description = translateText($youtubeLink->description, $locale);
+                    }
+                }
+
+                // Translate Zoom Link
+                if ($zoomLink) {
+                    if (!empty($zoomLink->title)) {
+                        $zoomLink->title = translateText($zoomLink->title, $locale);
+                    }
+
+                    if (!empty($zoomLink->description)) {
+                        $zoomLink->description = translateText($zoomLink->description, $locale);
+                    }
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'status' => 200,
@@ -96,7 +145,7 @@ class DashboardController extends Controller
             return response()->json([
                 'success' => false,
                 'status' => 500,
-                'message' => 'Something went wrong: ' . $e->getMessage()
+                'message' => translateText('Something went wrong.', $locale)
             ]);
         }
     }

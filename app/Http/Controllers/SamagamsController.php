@@ -6,7 +6,8 @@ use App\Models\Samagam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log; 
+use Illuminate\Support\Facades\Log;
+use App\Helpers\TranslateHelper;
 
 class SamagamsController extends Controller
 {
@@ -60,7 +61,6 @@ class SamagamsController extends Controller
 
     public function store(Request $request)
     {
-        Log::info("REQUEST RECIEVED::: ".$request);
         if (!$request->organizerName || !$request->details || !$request->startDate || !$request->phone || !$request->address || !$request->endDate || !$request->email || !$request->mapLink) {
             return response()->json([
                 'success' => false,
@@ -107,57 +107,90 @@ class SamagamsController extends Controller
         return response()->json($link);
     }
     //APIS
-    public function allSamagams()
-    {
-        $Samagam = Samagam::where('isDeleted', false)
-            ->where('isBlocked', false)
-            ->orderBy('id', 'desc')
-            ->get();
+    public function allSamagams(Request $request)
+{
+    $locale = $request->header('Accept-Language', 'en');
 
-        if ($Samagam->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'status' => 404,
-                'message' => 'No active Samagam found.',
-                'data' => []
-            ]);
-        }
+    $startPoint = $request->startPoint ?? 0;   // default 0
+    $limit = $request->limit ?? 5;            // default 10
 
+    $query = Samagam::where('isDeleted', false)
+        ->where('isBlocked', false)
+        ->orderBy('id', 'desc');
+
+    $total = $query->count();
+
+    $Samagam = $query->skip($startPoint)
+        ->take($limit)
+        ->get();
+
+    if ($Samagam->isEmpty()) {
         return response()->json([
-            'success' => true,
-            'status' => 200,
-            'message' => 'Active Samagams loaded successfully.',
-            'data' => $Samagam
+            'success' => false,
+            'status' => 404,
+            'message' => translateText('No active Samagam found.', $locale),
+            'data' => []
         ]);
     }
+
+    // 🔥 Translate only paginated data
+    if ($locale !== 'en') {
+        $Samagam->transform(function ($item) use ($locale) {
+
+            $item->organizerName = translateText($item->organizerName, $locale);
+            $item->address = translateText($item->address, $locale);
+            $item->details = translateText($item->details, $locale);
+
+            return $item;
+        });
+    }
+
+    return response()->json([
+        'success' => true,
+        'status' => 200,
+        'totalRecords' => $total,
+        'startPoint' => (int)$startPoint,
+        'limit' => (int)$limit,
+        'message' => translateText('Active Samagams loaded successfully.', $locale),
+        'data' => $Samagam
+    ]);
+}
 
 
     public function singleSamagam(Request $request)
     {
+        $locale = $request->header('Accept-Language', 'en');
+
         // Check if ID is provided
         if (!$request->id) {
             return response()->json([
                 'success' => false,
                 'status' => 400,
-                'message' => 'ID is required.',
+                'message' => translateText('ID is required.', $locale),
             ]);
         }
 
         $link = Samagam::where('id', $request->id)->first();
+
         if (!$link) {
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'Samagam not found.',
+                'message' => translateText('Samagam not found.', $locale),
             ]);
         }
+
+        // translate 
+        $link->organizerName = translateText($link->organizerName, $locale);
+        $link->address = translateText($link->address, $locale);
+        $link->details = translateText($link->details, $locale);
+
         return response()->json([
             'success' => true,
             'status' => 200,
             'message' => 'Samagam loaded successfully.',
             'data' => $link
         ]);
-
     }
 
 }

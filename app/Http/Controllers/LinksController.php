@@ -183,78 +183,162 @@ class LinksController extends Controller
     }
 
     //APIS
-    public function allLinks()
+    public function allLinks(Request $request)
     {
-        $Links = Links::where('isDeleted', false)
+        $locale = $request->header('Accept-Language', 'en');
+
+        $startPoint = $request->startPoint ?? 0;
+        $limit = $request->limit ?? 5;
+
+        $baseQuery = Links::where('isDeleted', false)
             ->where('isBlocked', false)
-            ->orderBy('id', 'desc')
+            ->orderBy('id', 'desc');
+
+        $total = $baseQuery->count();
+
+        $Links = $baseQuery
+            ->skip($startPoint)
+            ->take($limit)
             ->get();
 
         if ($Links->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'No active links found.',
+                'message' => translateText('No active links found.', $locale),
                 'data' => []
             ]);
+        }
+
+        if ($locale !== 'en') {
+            $Links->transform(function ($item) use ($locale) {
+
+                if (!empty($item->title)) {
+                    $item->title = translateText($item->title, $locale);
+                }
+
+                if (!empty($item->description)) {
+                    $item->description = translateText($item->description, $locale);
+                }
+
+                if (!empty($item->actionText)) {
+                    $item->actionText = translateText($item->actionText, $locale);
+                }
+
+                return $item;
+            });
         }
 
         return response()->json([
             'success' => true,
             'status' => 200,
-            'total' => $Links->count(),
-            'message' => 'Active links loaded successfully.',
+            'totalRecords' => $total,
+            'startPoint' => (int) $startPoint,
+            'limit' => (int) $limit,
+            'message' => translateText('Active links loaded successfully.', $locale),
             'data' => $Links
         ]);
     }
 
     public function categoryLink(Request $request)
     {
-        $Links = Links::where('isDeleted', false)
+        $locale = $request->header('Accept-Language', 'en');
+
+        $startPoint = $request->startPoint ?? 0;
+        $limit = $request->limit ?? 5;
+
+        $baseQuery = Links::where('isDeleted', false)
             ->where('isBlocked', false)
             ->where('categoryId', $request->categoryId)
-            ->orderBy('id', 'desc')
+            ->orderBy('id', 'desc');
+
+        $total = $baseQuery->count();
+
+        $Links = $baseQuery
+            ->skip($startPoint)
+            ->take($limit)
             ->get();
 
         if ($Links->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'No active links found.',
+                'message' => translateText('No active links found.', $locale),
                 'data' => []
             ]);
+        }
+
+        if ($locale !== 'en') {
+            $Links->transform(function ($item) use ($locale) {
+
+                if (!empty($item->title)) {
+                    $item->title = translateText($item->title, $locale);
+                }
+
+                if (!empty($item->description)) {
+                    $item->description = translateText($item->description, $locale);
+                }
+
+                if (!empty($item->actionText)) {
+                    $item->actionText = translateText($item->actionText, $locale);
+                }
+
+                return $item;
+            });
         }
 
         return response()->json([
             'success' => true,
             'status' => 200,
-            'total' => $Links->count(),
-            'message' => 'Active links loaded successfully.',
+            'totalRecords' => $total,
+            'startPoint' => (int) $startPoint,
+            'limit' => (int) $limit,
+            'message' => translateText('Active links loaded successfully.', $locale),
             'data' => $Links
         ]);
     }
 
     public function singleLink(Request $request)
     {
+        $locale = $request->header('Accept-Language', 'en');
+
         if (!$request->id) {
             return response()->json([
                 'success' => false,
                 'status' => 400,
-                'message' => 'ID is required.',
+                'message' => translateText('ID is required.', $locale),
             ]);
         }
+
         $link = Links::where('id', $request->id)->first();
+
         if (!$link) {
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'Link not found.',
+                'message' => translateText('Link not found.', $locale),
             ]);
         }
+
+        if ($locale !== 'en') {
+
+            if (!empty($link->title)) {
+                $link->title = translateText($link->title, $locale);
+            }
+
+            if (!empty($link->description)) {
+                $link->description = translateText($link->description, $locale);
+            }
+
+            if (!empty($link->actionText)) {
+                $link->actionText = translateText($link->actionText, $locale);
+            }
+        }
+
         return response()->json([
             'success' => true,
             'status' => 200,
-            'message' => 'Link loaded successfully.',
+            'message' => translateText('Link loaded successfully.', $locale),
             'data' => $link
         ]);
     }

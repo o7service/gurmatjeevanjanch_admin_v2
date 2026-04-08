@@ -166,11 +166,22 @@ class ProgramsLinksController extends Controller
     // }
 
 
-    public function allPrograms()
+    public function allPrograms(Request $request)
     {
-        $programsLinks = ProgramsLinks::where('isDeleted', false)
+        $locale = $request->header('Accept-Language', 'en');
+
+        $startPoint = $request->startPoint ?? 0;
+        $limit = $request->limit ?? 5;
+
+        $baseQuery = ProgramsLinks::where('isDeleted', false)
             ->where('isBlocked', false)
-            ->orderBy('startDate', 'desc')
+            ->orderBy('startDate', 'desc');
+
+        $total = $baseQuery->count();
+
+        $programsLinks = $baseQuery
+            ->skip($startPoint)
+            ->take($limit)
             ->get();
 
         $distinctDatesCount = ProgramsLinks::where('isDeleted', false)
@@ -182,12 +193,31 @@ class ProgramsLinksController extends Controller
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'No active Samagam found.',
+                'message' => translateText('No active Program found.', $locale),
                 'data' => [],
                 'distinctDates' => $distinctDatesCount
             ]);
         }
 
+        if ($locale !== 'en') {
+            $programsLinks->transform(function ($item) use ($locale) {
+                if (!empty($item->title)) {
+                    $item->title = translateText($item->title, $locale);
+                }
+
+                if (!empty($item->description)) {
+                    $item->description = translateText($item->description, $locale);
+                }
+
+                if (!empty($item->location)) {
+                    $item->location = translateText($item->location, $locale);
+                }
+
+                return $item;
+            });
+        }
+
+        // Group by date
         $groupedData = $programsLinks->groupBy(function ($item) {
             return \Carbon\Carbon::parse($item->startDate)->format('Y-m-d');
         });
@@ -195,70 +225,116 @@ class ProgramsLinksController extends Controller
         return response()->json([
             'success' => true,
             'status' => 200,
-            'message' => 'Active Samagams loaded successfully.',
+            'totalRecords' => $total,
+            'startPoint' => (int) $startPoint,
+            'limit' => (int) $limit,
             'distinctDates' => $distinctDatesCount,
+            'message' => translateText('Programs loaded successfully.', $locale),
             'data' => $groupedData
         ]);
     }
 
-
-
     public function programByDate(Request $request)
     {
+        $locale = $request->header('Accept-Language', 'en');
+
         if (!$request->date) {
             return response()->json([
                 'success' => false,
                 'status' => 400,
-                'message' => 'Date is required.',
+                'message' => translateText('Date is required.', $locale),
             ]);
         }
 
-        $link = programsLinks::where('startDate', $request->date)->get();
+        $startPoint = $request->startPoint ?? 0;
+        $limit = $request->limit ?? 10;
+
+        $query = ProgramsLinks::where('startDate', $request->date);
+
+        $total = $query->count();
+
+        $link = $query->skip($startPoint)
+            ->take($limit)
+            ->get();
 
         if ($link->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'Program not found.',
+                'message' => translateText('Program not found.', $locale),
             ]);
+        }
+
+        if ($locale !== 'en') {
+
+            $link->transform(function ($item) use ($locale) {
+
+                if (!empty($item->title)) {
+                    $item->title = translateText($item->title, $locale);
+                }
+
+                if (!empty($item->description)) {
+                    $item->description = translateText($item->descr, $locale);
+                }
+
+                return $item;
+            });
         }
 
         return response()->json([
             'success' => true,
             'status' => 200,
-            'message' => 'Programs loaded successfully.',
+            'totalRecords' => $total,
+            'startPoint' => (int) $startPoint,
+            'limit' => (int) $limit,
+            'message' => translateText('Programs loaded successfully.', $locale),
             'data' => $link
         ]);
     }
 
-
-
     public function singleProgram(Request $request)
     {
-        // Check if ID is provided
+        $locale = $request->header('Accept-Language', 'en');
+
         if (!$request->id) {
             return response()->json([
                 'success' => false,
                 'status' => 400,
-                'message' => 'ID is required.',
+                'message' => translateText('ID is required.', $locale),
             ]);
         }
 
         $link = ProgramsLinks::where('id', $request->id)->first();
+
         if (!$link) {
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'Program not found.',
+                'message' => translateText('Program not found.', $locale),
             ]);
         }
+
+        if ($locale !== 'en') {
+
+            if (!empty($link->title)) {
+                $link->title = translateText($link->title, $locale);
+            }
+
+            if (!empty($link->description)) {
+                $link->description = translateText($link->description, $locale);
+            }
+
+            if (!empty($link->location)) {
+                $link->location = translateText($link->location, $locale);
+            }
+        }
+
         return response()->json([
             'success' => true,
             'status' => 200,
-            'message' => 'Program loaded successfully.',
+            'message' => translateText('Program loaded successfully.', $locale),
             'data' => $link
         ]);
-
     }
 
 }

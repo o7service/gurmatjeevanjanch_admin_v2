@@ -103,7 +103,7 @@ class SingerImagesController extends Controller
 
             if ($request->hasFile('file')) {
                 $file = $request->file('file');
-                $newFileName = 'singers/'. time() . '-' . $file->getClientOriginalName();
+                $newFileName = 'singers/' . time() . '-' . $file->getClientOriginalName();
                 $file->move(public_path('singers'), $newFileName);
                 $link->imageUrl = $newFileName;
             }
@@ -128,38 +128,63 @@ class SingerImagesController extends Controller
         }
     }
     //APIS
-    public function allSingers()
+    public function allSingers(Request $request)
     {
-        $singerImages = singerImages::where('isDeleted', false)
+        $locale = $request->header('Accept-Language', 'en');
+
+        $startPoint = $request->startPoint ?? 0;
+        $limit = $request->limit ?? 5;
+
+        $query = singerImages::where('isDeleted', false)
             ->where('isBlocked', false)
-            ->orderBy('id', 'desc')
+            ->orderBy('id', 'desc');
+
+        $total = $query->count();
+
+        $singerImages = $query->skip($startPoint)
+            ->take($limit)
             ->get();
 
         if ($singerImages->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'No singers found.',
+                'message' => translateText('No singers found.', $locale),
                 'data' => []
             ]);
+        }
+
+        if ($locale !== 'en') {
+            $singerImages->transform(function ($item) use ($locale) {
+
+                if (!empty($item->name)) {
+                    $item->name = translateText($item->name, $locale);
+                }
+
+                return $item;
+            });
         }
 
         return response()->json([
             'success' => true,
             'status' => 200,
-            'message' => 'Singers loaded successfully.',
+            'totalRecords' => $total,
+            'startPoint' => (int) $startPoint,
+            'limit' => (int) $limit,
+            'message' => translateText('Singers loaded successfully.', $locale),
             'data' => $singerImages
         ]);
     }
 
     public function singleSinger(Request $request)
     {
-        // Check if ID is provided
+        $locale = $request->header('Accept-Language', 'en');
+
         if (!$request->id) {
             return response()->json([
                 'success' => false,
                 'status' => 400,
-                'message' => 'ID is required.',
+                'message' => translateText('ID is required.', $locale),
             ]);
         }
 
@@ -168,16 +193,25 @@ class SingerImagesController extends Controller
             return response()->json([
                 'success' => false,
                 'status' => 404,
-                'message' => 'Singer not found.',
+                'message' => translateText('Singer not found.', $locale),
             ]);
         }
+
+        if ($locale !== 'en') {
+            if (!empty($link->name)) {
+                $link->name = translateText($link->name, $locale);
+            }
+            if (!empty($link->description)) {
+                $link->description = translateText($link->description, $locale);
+            }
+        }
+
         return response()->json([
             'success' => true,
             'status' => 200,
-            'message' => 'Singer loaded successfully.',
+            'message' => translateText('Singer loaded successfully.', $locale),
             'data' => $link
         ]);
-
     }
 
 
